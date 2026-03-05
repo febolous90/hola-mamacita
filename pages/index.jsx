@@ -500,7 +500,7 @@ function App() {
   const [mc,setMc]=useState("choose");
   const [toastMsg,setToastMsg]=useState("");
   const [showAuth,setShowAuth]=useState(false);
-  const [user,setUser]=useState(null);
+  const [user,setUser]=useState(()=>{try{const s=localStorage.getItem("hm_user");return s?JSON.parse(s):null;}catch{return null;}});
   const [selectedCard,setSelectedCard]=useState(null);
   const [openTutor,setOpenTutor]=useState(null);
 
@@ -515,7 +515,7 @@ function App() {
     return()=>{window.removeEventListener("mousemove",move);el.remove();document.body.style.cursor="";};
   },[]);
 
-  const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(""),2600);};
+  useEffect(()=>{if(user)localStorage.setItem("hm_user",JSON.stringify(user));else localStorage.removeItem("hm_user");},[user]);const toast=m=>{setToastMsg(m);setTimeout(()=>setToastMsg(""),2600);};
   const go=(p,anchor)=>{
     setPage(p);setShowAuth(false);
     if(anchor)setTimeout(()=>document.getElementById("sec-"+anchor)?.scrollIntoView({behavior:"smooth"}),80);
