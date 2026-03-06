@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPA_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 const STRIPE_TRIAL_LINK = "STRIPE_TRIAL_LINK";
 
 const H = (token) => ({
@@ -17,9 +16,9 @@ async function apiSignIn(email, password) {
       method: "POST", headers: H(), body: JSON.stringify({ email, password })
     });
     const d = await r.json();
-    if (!r.ok) return { error: d.error_description || d.msg || "Credenziali non valide" };
+    if (!r.ok) return { error: d.error_description || d.msg || "Invalid credentials" };
     return d;
-  } catch(e) { return { error: "Errore di rete. Riprova." }; }
+  } catch(e) { return { error: "Network error. Please try again." }; }
 }
 
 async function apiSignUp(email, password) {
@@ -28,9 +27,9 @@ async function apiSignUp(email, password) {
       method: "POST", headers: H(), body: JSON.stringify({ email, password })
     });
     const d = await r.json();
-    if (!r.ok) return { error: d.error_description || d.msg || "Errore registrazione" };
+    if (!r.ok) return { error: d.error_description || d.msg || "Registration error" };
     return d;
-  } catch(e) { return { error: "Errore di rete. Riprova." }; }
+  } catch(e) { return { error: "Network error. Please try again." }; }
 }
 
 async function apiGetSessions(token) {
@@ -44,279 +43,306 @@ async function apiGetSessions(token) {
 const TUTORS = [
   {
     name:"Valentina", flag:"🇨🇴", origin:"Colombia", avatar:"💁🏽‍♀️",
-    bio:"Energica e paziente, specializzata in spagnolo conversazionale e slang latinoamericano.",
     live:true, sessions:142, age:27,
-    languages:["Spanish","English","Portuguese"],
-    specialties:["Latin slang","Daily conversation","Colombian accent"],
     tags:["Playful","Beginner friendly","High energy"],
     rating:4.9,
     reviews:[{text:"I learned more in 30 min with Valentina than months on Duolingo!", author:"Marco R."}],
     personality:"Bubbly, energetic and always ready to laugh. Loves salsa, Colombian coffee and teaching with real life stories.",
     color:"#FF2D8B",
-    services:[
-      {name:"30 min conversation", price:"15€"},
-      {name:"60 min conversation", price:"25€"},
-      {name:"Instant call", price:"10€"},
-    ]
+    services:[{name:"30 min conversation",price:"15€"},{name:"60 min conversation",price:"25€"},{name:"Instant call",price:"10€"}]
   },
   {
     name:"Sofía", flag:"🇲🇽", origin:"Mexico", avatar:"👩🏻‍🦱",
-    bio:"Appassionata di cultura pop messicana, ti insegna a parlare come un locale in poche ore.",
     live:false, sessions:98, age:25,
-    languages:["Spanish","English"],
-    specialties:["Mexican culture","Basic Spanish","Travel phrases"],
     tags:["Confident","Cultural","Fun"],
     rating:4.8,
     reviews:[{text:"Sofía made me fall even more in love with Mexico. Super fun session!", author:"Luca M."}],
     personality:"Creative and curious, loves cinema, tacos and deep conversations. Turns every lesson into a cultural trip.",
     color:"#FF6B00",
-    services:[
-      {name:"30 min conversation", price:"15€"},
-      {name:"Flirty Spanish", price:"20€"},
-      {name:"Instant call", price:"10€"},
-    ]
+    services:[{name:"30 min conversation",price:"15€"},{name:"Flirty Spanish",price:"20€"},{name:"Instant call",price:"10€"}]
   },
   {
     name:"Camila", flag:"🇦🇷", origin:"Argentina", avatar:"👩🏼‍🦰",
-    bio:"Accento porteño autentico, esperta di grammatica e pronuncia. Sessioni divertenti e dirette.",
     live:true, sessions:210, age:29,
-    languages:["Spanish","Italian","English"],
-    specialties:["Argentine accent","Advanced grammar","Tango & culture"],
     tags:["Direct","Advanced","Passionate"],
     rating:5.0,
     reviews:[{text:"Camila is a true professional. Her method is unique — you learn without even realising it.", author:"Andrea F."}],
     personality:"Direct, passionate and with sharp humor. Loves tango, Borges and challenging her students to leave their comfort zone.",
     color:"#2979FF",
-    services:[
-      {name:"30 min conversation", price:"18€"},
-      {name:"60 min conversation", price:"30€"},
-      {name:"Instant call", price:"12€"},
-    ]
+    services:[{name:"30 min conversation",price:"18€"},{name:"60 min conversation",price:"30€"},{name:"Instant call",price:"12€"}]
   },
 ];
 
-const css = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
+const STRIP_ITEMS = ["Private Spanish Conversations","One-to-One with Mamacitas","From Latin America & Spain","Fun · Natural · Real","Available Now","Book a Private Session","¡Hola Mamacita!"];
 
-:root {
-  --pink:#FF2D8B; --orange:#FF6B00; --yellow:#FFD000; --green:#00C853; --blue:#2979FF;
-  --rb:linear-gradient(135deg,#FF2D8B,#FF6B00,#FFD000,#00C853,#2979FF,#9C27B0,#FF2D8B);
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+:root{
+  --pink:#FF2D8B;--orange:#FF6B00;--yellow:#FFD000;--green:#00C853;--blue:#2979FF;
+  --rb:linear-gradient(135deg,#FF2D8B 0%,#FF6B00 25%,#FFD000 50%,#00C853 75%,#2979FF 100%);
   --rb2:linear-gradient(90deg,#FF2D8B,#FF6B00,#FFD000,#00C853,#2979FF,#9C27B0,#FF2D8B);
-  --soft:#FFF5FB; --night:#08001A;
+  --cream:#FFFBF5;--warm:#FFF6ED;
 }
 
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
-body { font-family:'Inter',sans-serif; background:#FFFBFF; color:#222; overflow-x:hidden; cursor:none; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:#1a1a1a;overflow-x:hidden;cursor:none}
 
-#peach-cursor { position:fixed; top:0; left:0; pointer-events:none; z-index:99999; font-size:28px; transform:translate(-50%,-50%); user-select:none; line-height:1; }
+#hm-cursor{position:fixed;top:0;left:0;pointer-events:none;z-index:99999;font-size:26px;transform:translate(-50%,-50%);user-select:none;line-height:1;transition:left .04s ease-out,top .04s ease-out}
 
 /* NAV */
-.nav { position:sticky; top:0; z-index:200; background:rgba(255,251,255,0.92); backdrop-filter:blur(12px); box-shadow:0 1px 0 #f0f0f0; }
-.nav-rb { height:3px; background:var(--rb2); }
-.nav-inner { padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:60px; }
-.nav-logo { font-family:'Playfair Display',serif; font-size:18px; border:none; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-weight:700; padding:0; cursor:none; font-style:italic; }
-.nav-links { display:flex; gap:20px; align-items:center; }
-.nav-link { color:#bbb; font-size:13px; background:none; border:none; cursor:none; font-family:'Inter',sans-serif; transition:color .2s; padding:0; font-weight:500; }
-.nav-link:hover, .nav-link.active { color:#222; }
-.nav-cta { background:var(--rb); color:#fff; font-weight:700; font-size:13px; padding:10px 24px; border-radius:100px; border:none; cursor:none; font-family:'Inter',sans-serif; box-shadow:0 4px 16px rgba(255,45,139,.28); transition:opacity .2s, transform .15s; }
-.nav-cta:hover { opacity:.88; transform:translateY(-1px); }
+.nav{position:fixed;top:0;left:0;right:0;z-index:500;transition:all .3s}
+.nav.scrolled{background:rgba(255,251,245,.94);backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.nav-rb{height:3px;background:var(--rb2)}
+.nav-inner{padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Playfair Display',serif;font-size:19px;border:none;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;padding:0;cursor:none;font-style:italic}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-link{color:rgba(26,26,26,.4);font-size:13px;background:none;border:none;cursor:none;font-family:'DM Sans',sans-serif;transition:color .2s;padding:0;font-weight:500}
+.nav-link:hover{color:#1a1a1a}
+.nav-cta{background:var(--rb);color:#fff;font-weight:600;font-size:13px;padding:11px 26px;border-radius:100px;border:none;cursor:none;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(255,45,139,.32);transition:all .2s}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,45,139,.4)}
 
 /* STRIP */
-.strip { background:var(--rb); padding:12px 0; overflow:hidden; }
-.mtrack { display:flex; white-space:nowrap; animation:mq 28s linear infinite; }
-.mitem { font-family:'Playfair Display',serif; font-style:italic; font-size:14px; color:#fff; padding:0 28px; opacity:.9; }
-.mitem::before { content:'✦'; margin-right:16px; opacity:.6; }
-@keyframes mq { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.strip{background:var(--rb);padding:11px 0;overflow:hidden}
+.mtrack{display:flex;white-space:nowrap;animation:mq 30s linear infinite}
+.mitem{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:rgba(255,255,255,.9);padding:0 32px}
+.mitem::before{content:'✦';margin-right:18px;opacity:.5;font-style:normal;font-size:10px}
+@keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
 /* HERO */
-.hero { min-height:100vh; background:#FFFBFF; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; text-align:center; padding:120px 24px 80px; }
-.hero-bg-dots { position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(circle,rgba(255,45,139,.08) 1.5px,transparent 1.5px); background-size:32px 32px; }
-.hero-arch { position:absolute; bottom:-120px; left:50%; transform:translateX(-50%); width:160vw; height:80vw; border-radius:50%; background:conic-gradient(from 198deg at 50% 100%,#FF2D8B,#FF6B00,#FFD000,#00C853,#2979FF,#9C27B0,#FF2D8B); opacity:.05; pointer-events:none; }
-.cblob { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; animation:cbf 10s ease-in-out infinite; }
-.cb1 { width:420px; height:420px; background:var(--yellow); opacity:.14; top:-80px; right:-60px; }
-.cb2 { width:320px; height:320px; background:var(--pink); opacity:.11; bottom:-60px; left:-60px; animation-delay:-4s; }
-.cb3 { width:260px; height:260px; background:var(--blue); opacity:.08; top:30%; left:2%; animation-delay:-6s; }
-.cb4 { width:200px; height:200px; background:var(--green); opacity:.09; top:20%; right:5%; animation-delay:-2s; }
-@keyframes cbf { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-28px)} 66%{transform:translate(-14px,18px)} }
+.hero{min-height:100vh;background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:140px 24px 100px}
+.hero::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 60% at 15% 20%,rgba(255,107,0,.11) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 50% at 85% 15%,rgba(255,45,139,.09) 0%,transparent 55%),
+  radial-gradient(ellipse 70% 60% at 50% 90%,rgba(255,208,0,.09) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 40% at 90% 75%,rgba(0,200,83,.06) 0%,transparent 50%);
+pointer-events:none;z-index:0}
 
-.fls { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
-.fl { position:absolute; opacity:0; animation:flup 8s ease-in infinite; }
-.fl:nth-child(1){left:4%;font-size:26px;animation-delay:0s}
-.fl:nth-child(2){left:12%;font-size:18px;animation-delay:-2s;animation-duration:10s}
-.fl:nth-child(3){left:72%;font-size:22px;animation-delay:-1s;animation-duration:9s}
-.fl:nth-child(4){left:84%;font-size:16px;animation-delay:-4s}
-.fl:nth-child(5){left:43%;font-size:14px;animation-delay:-3s;animation-duration:11s}
-.fl:nth-child(6){left:27%;font-size:20px;animation-delay:-5s;animation-duration:9s}
-.fl:nth-child(7){left:57%;font-size:24px;animation-delay:-1.5s;animation-duration:10s}
-.fl:nth-child(8){left:91%;font-size:13px;animation-delay:-3.5s}
-@keyframes flup { 0%{opacity:0;transform:translateY(100vh)} 10%{opacity:.7} 90%{opacity:.1} 100%{opacity:0;transform:translateY(-10vh) rotate(15deg)} }
+/* Geometric circles */
+.hs{position:absolute;pointer-events:none;z-index:0;border-radius:50%}
+.hs1{width:340px;height:340px;border:1.5px solid rgba(255,45,139,.09);top:-100px;right:6%;animation:rot 44s linear infinite}
+.hs2{width:230px;height:230px;border:1px solid rgba(255,107,0,.1);top:8%;right:4%;animation:rot 30s linear infinite reverse}
+.hs3{width:180px;height:180px;border:1px solid rgba(255,208,0,.12);bottom:12%;left:4%;animation:rot 38s linear infinite}
+.hs4{width:72px;height:72px;background:rgba(255,45,139,.06);top:26%;left:7%;animation:bob 6s ease-in-out infinite}
+.hs5{width:48px;height:48px;background:rgba(255,107,0,.07);bottom:26%;right:9%;animation:bob 8s ease-in-out infinite;animation-delay:-3s}
+.dot1{width:10px;height:10px;background:var(--pink);opacity:.55;top:40%;left:14%;animation:bob 4.5s ease-in-out infinite}
+.dot2{width:7px;height:7px;background:var(--orange);opacity:.6;top:18%;right:20%;animation:bob 5.5s ease-in-out infinite;animation-delay:-2s}
+.dot3{width:8px;height:8px;background:var(--yellow);opacity:.55;bottom:33%;left:17%;animation:bob 7s ease-in-out infinite;animation-delay:-1s}
+@keyframes rot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 
-.hero-inner { position:relative; z-index:2; max-width:700px; }
-.hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,45,139,.08); border:1px solid rgba(255,45,139,.2); border-radius:100px; padding:6px 16px; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--pink); margin-bottom:28px; }
-.hero-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--pink); animation:pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+.fls{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.fl{position:absolute;opacity:0;animation:flup 9s ease-in infinite;font-size:19px}
+.fl:nth-child(1){left:3%;animation-delay:0s}
+.fl:nth-child(2){left:11%;font-size:14px;animation-delay:-3s;animation-duration:11s}
+.fl:nth-child(3){left:74%;font-size:17px;animation-delay:-1.5s;animation-duration:10s}
+.fl:nth-child(4){left:86%;font-size:13px;animation-delay:-5s}
+.fl:nth-child(5){left:45%;font-size:12px;animation-delay:-4s;animation-duration:12s}
+.fl:nth-child(6){left:28%;font-size:16px;animation-delay:-6s;animation-duration:10s}
+.fl:nth-child(7){left:60%;font-size:20px;animation-delay:-2s;animation-duration:11s}
+.fl:nth-child(8){left:92%;font-size:11px;animation-delay:-4.5s}
+@keyframes flup{0%{opacity:0;transform:translateY(100vh) rotate(-10deg)}8%{opacity:.55}88%{opacity:.08}100%{opacity:0;transform:translateY(-12vh) rotate(12deg)}}
 
-.brand { font-family:'Playfair Display',serif; font-size:clamp(52px,10vw,110px); line-height:.88; letter-spacing:-3px; margin-bottom:12px; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-style:italic; }
-.hero-sub-title { font-family:'Playfair Display',serif; font-size:clamp(16px,2.2vw,22px); color:#888; font-style:italic; margin-bottom:16px; line-height:1.5; font-weight:400; }
-.hero-desc { font-size:15px; color:#aaa; line-height:1.75; max-width:480px; margin:0 auto 36px; }
+.hero-inner{position:relative;z-index:2;max-width:720px}
+.hero-inner>*{opacity:0;animation:fadeUp .9s cubic-bezier(.22,1,.36,1) forwards}
+.hero-badge{animation-delay:.1s}
+.brand{animation-delay:.26s}
+.hero-tagline{animation-delay:.42s}
+.hero-desc{animation-delay:.55s}
+.hero-cta-group{animation-delay:.67s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
 
-.hero-cta-group { display:flex; flex-direction:column; align-items:center; gap:10px; }
-.btn-primary { background:var(--rb); color:#fff; font-weight:700; font-size:16px; padding:18px 44px; border-radius:100px; border:none; cursor:none; font-family:'Inter',sans-serif; box-shadow:0 6px 28px rgba(255,45,139,.35); transition:opacity .2s,transform .15s; letter-spacing:.3px; }
-.btn-primary:hover { opacity:.88; transform:translateY(-2px); }
-.hero-meta { font-size:12px; color:#ccc; font-weight:500; letter-spacing:.5px; }
-.hero-meta span { margin:0 6px; }
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,45,139,.06);border:1.5px solid rgba(255,45,139,.16);border-radius:100px;padding:7px 18px;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin-bottom:24px}
+.hb-dot{width:6px;height:6px;border-radius:50%;background:var(--pink);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
 
-.scroll-arrow { position:absolute; bottom:28px; left:50%; z-index:2; width:18px; height:18px; border-right:2px solid #ddd; border-bottom:2px solid #ddd; transform:translateX(-50%) rotate(45deg); animation:bnc 2s ease-in-out infinite; }
-@keyframes bnc { 0%,100%{transform:translateX(-50%) rotate(45deg) translateY(0)} 50%{transform:translateX(-50%) rotate(45deg) translateY(7px)} }
+.brand{font-family:'Playfair Display',serif;font-size:clamp(52px,10.5vw,116px);line-height:.86;letter-spacing:-4px;margin-bottom:10px;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic}
+.brand-under{display:block;width:55%;height:3px;background:var(--rb);border-radius:3px;margin:14px auto 0;opacity:.35}
+
+.hero-tagline{font-family:'Playfair Display',serif;font-size:clamp(16px,2.3vw,23px);color:#666;font-style:italic;margin:22px 0 12px;font-weight:400;line-height:1.4;letter-spacing:-.2px}
+.hero-desc{font-size:15px;color:#aaa;line-height:1.8;max-width:460px;margin:0 auto 40px;font-weight:300}
+
+.hero-cta-group{display:flex;flex-direction:column;align-items:center;gap:12px}
+.btn-hero{background:var(--rb);color:#fff;font-weight:600;font-size:16px;padding:18px 52px;border-radius:100px;border:none;cursor:none;font-family:'DM Sans',sans-serif;box-shadow:0 8px 36px rgba(255,45,139,.36),0 2px 8px rgba(255,107,0,.18);transition:all .25s;letter-spacing:.2px;position:relative;overflow:hidden}
+.btn-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent);border-radius:100px;pointer-events:none}
+.btn-hero:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(255,45,139,.44),0 4px 12px rgba(255,107,0,.22)}
+.hero-meta{font-size:12px;color:#ccc;font-weight:300;letter-spacing:.3px}
+.hero-meta span{margin:0 7px;opacity:.4}
+
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;animation:fadeUp .8s .9s forwards}
+.scroll-hint-text{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#ccc;font-weight:500}
+.scroll-arrow{width:16px;height:16px;border-right:2px solid #ddd;border-bottom:2px solid #ddd;transform:rotate(45deg);animation:bnc 2s ease-in-out infinite}
+@keyframes bnc{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(5px)}}
 
 /* SECTIONS */
-.sec { padding:80px 24px; }
-.wrap { max-width:900px; margin:0 auto; }
-.wsm { max-width:620px; margin:0 auto; }
-.tc { text-align:center; }
-.bg-white { background:#fff; }
-.bg-soft { background:var(--soft); }
-.bg-night { background:var(--night); position:relative; overflow:hidden; }
-.bg-night::before { content:''; position:absolute; inset:0; background:conic-gradient(from 0deg at 50% 110%,rgba(255,45,139,.15),rgba(255,107,0,.08),rgba(0,200,83,.06),rgba(41,121,255,.08),rgba(255,45,139,.15)); pointer-events:none; }
+.sec{padding:88px 24px}
+.wrap{max-width:960px;margin:0 auto}
+.wsm{max-width:640px;margin:0 auto}
+.tc{text-align:center}
+.bg-cream{background:var(--cream)}
+.bg-warm{background:var(--warm)}
+.bg-white{background:#fff}
 
-.sec-label { font-size:10px; letter-spacing:3.5px; text-transform:uppercase; font-weight:700; margin-bottom:14px; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.sec-title { font-family:'Playfair Display',serif; font-size:clamp(24px,3.8vw,42px); line-height:1.12; margin-bottom:16px; color:#222; }
-.sec-title em { font-style:italic; color:var(--pink); -webkit-text-fill-color:var(--pink); }
-.sec-desc { font-size:15px; color:#aaa; line-height:1.75; max-width:520px; margin:0 auto; }
+.sec-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,46px);line-height:1.08;margin-bottom:18px;color:#1a1a1a;letter-spacing:-1px}
+.sec-title em{font-style:italic;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sec-desc{font-size:15px;color:#aaa;line-height:1.8;max-width:520px;margin:0 auto;font-weight:300}
 
 /* HOW IT WORKS */
-.how-steps { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:48px; }
-.how-step { flex:1; min-width:180px; max-width:240px; text-align:center; padding:36px 24px; background:#fff; border-radius:24px; border:2px solid #f5e8f8; transition:all .25s; }
-.how-step:hover { transform:translateY(-4px); box-shadow:0 12px 36px rgba(255,45,139,.1); border-color:transparent; background:linear-gradient(#fff,#fff) padding-box, var(--rb) border-box; }
-.how-step-icon { font-size:40px; margin-bottom:16px; }
-.how-step-num { font-family:'Playfair Display',serif; font-size:13px; font-weight:700; color:#ddd; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-.how-step h3 { font-family:'Playfair Display',serif; font-size:18px; color:#222; margin-bottom:8px; font-style:italic; }
-.how-step p { font-size:13px; color:#aaa; line-height:1.65; }
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:52px}
+.how-card{background:#fff;border-radius:28px;padding:40px 28px 32px;border:1.5px solid rgba(0,0,0,.05);transition:all .3s;position:relative;overflow:hidden}
+.how-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.07);border-color:rgba(255,45,139,.12)}
+.how-num{font-family:'Playfair Display',serif;font-size:72px;line-height:1;font-style:italic;font-weight:700;margin-bottom:14px;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:.15}
+.how-icon{font-size:34px;margin-bottom:14px;display:block}
+.how-card h3{font-family:'Playfair Display',serif;font-size:19px;color:#1a1a1a;margin-bottom:10px;font-style:italic}
+.how-card p{font-size:13px;color:#aaa;line-height:1.7;font-weight:300}
 
-/* MAMACITAS */
-.mamacita-grid { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:48px; }
-.mamacita-card { flex:1; min-width:240px; max-width:280px; background:#fff; border-radius:28px; border:2px solid #f5e8f8; overflow:hidden; transition:all .28s; cursor:none; }
-.mamacita-card:hover { transform:translateY(-6px); box-shadow:0 20px 52px rgba(255,45,139,.14); }
-.mc-top { padding:32px 24px 20px; text-align:center; position:relative; }
-.mc-avatar { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#FFD6EC,#FFB3D9); display:flex; align-items:center; justify-content:center; font-size:46px; margin:0 auto 14px; box-shadow:0 6px 20px rgba(255,45,139,.18); }
-.mc-name { font-family:'Playfair Display',serif; font-size:22px; font-style:italic; font-weight:700; color:#222; margin-bottom:4px; }
-.mc-origin { font-size:12px; color:#bbb; font-weight:600; margin-bottom:12px; }
-.mc-live { display:inline-flex; align-items:center; gap:6px; border-radius:100px; padding:4px 14px; font-size:11px; font-weight:700; margin-bottom:14px; }
-.mc-live.online { background:#f0fff4; border:1.5px solid #00C853; color:#00A040; }
-.mc-live.offline { background:#f5f5f5; border:1.5px solid #eee; color:#bbb; }
-.mc-live-dot { width:6px; height:6px; border-radius:50%; }
-.mc-live.online .mc-live-dot { background:#00C853; box-shadow:0 0 6px #00C853; }
-.mc-live.offline .mc-live-dot { background:#ccc; }
-.mc-tags { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
-.mc-tag { background:var(--soft); border-radius:100px; padding:4px 12px; font-size:11px; font-weight:600; color:var(--pink); }
-.mc-review { margin:0 24px 20px; background:#fafafa; border-radius:14px; padding:14px 16px; border-left:3px solid var(--pink); }
-.mc-review-text { font-size:12px; color:#666; line-height:1.6; font-style:italic; margin-bottom:6px; }
-.mc-review-author { font-size:11px; color:#bbb; font-weight:600; }
-.mc-review-stars { color:#FFD000; font-size:12px; margin-bottom:4px; }
-.mc-footer { padding:0 24px 24px; }
-.mc-btn { display:block; width:100%; background:var(--rb); color:#fff; padding:13px; border-radius:100px; font-size:13px; font-weight:700; border:none; cursor:none; font-family:'Inter',sans-serif; text-align:center; transition:opacity .2s; }
-.mc-btn:hover { opacity:.88; }
+/* MAMACITA CARDS */
+.mamacita-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:24px;margin-top:52px}
+.mc{background:#fff;border-radius:32px;overflow:hidden;transition:all .32s cubic-bezier(.22,1,.36,1);cursor:none;border:1.5px solid rgba(0,0,0,.05)}
+.mc:hover{transform:translateY(-8px);box-shadow:0 28px 72px rgba(0,0,0,.1);border-color:rgba(255,45,139,.1)}
+.mc-color-bar{height:4px;width:100%;background:var(--rb)}
+.mc-body{padding:32px 28px 22px;text-align:center}
+.mc-avatar-wrap{position:relative;display:inline-block;margin-bottom:18px}
+.mc-avatar{width:94px;height:94px;border-radius:50%;background:linear-gradient(135deg,#FFE4F3,#FFD0E8);display:flex;align-items:center;justify-content:center;font-size:48px;box-shadow:0 8px 28px rgba(255,45,139,.15);transition:transform .3s}
+.mc:hover .mc-avatar{transform:scale(1.07)}
+.mc-live-badge{position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center}
+.mc-live-badge.on{background:#00C853;box-shadow:0 0 8px rgba(0,200,83,.55)}
+.mc-live-badge.off{background:#ddd}
+.mc-live-badge span{width:7px;height:7px;border-radius:50%;background:#fff}
+.mc-name{font-family:'Playfair Display',serif;font-size:24px;font-style:italic;font-weight:700;color:#1a1a1a;margin-bottom:4px;letter-spacing:-.3px}
+.mc-origin{font-size:12px;color:#bbb;font-weight:400;margin-bottom:14px;letter-spacing:.3px}
+.mc-tags{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.mc-tag{background:var(--warm);border-radius:100px;padding:5px 13px;font-size:11px;font-weight:500;color:#888}
+.mc-tag:first-child{background:rgba(255,45,139,.07);color:var(--pink)}
+.mc-review{background:var(--warm);border-radius:16px;padding:16px 18px;margin-bottom:20px;position:relative}
+.mc-review::before{content:'"';position:absolute;top:-6px;left:14px;font-family:'Playfair Display',serif;font-size:52px;color:rgba(255,45,139,.1);line-height:1;pointer-events:none}
+.mc-review-stars{color:#FFB800;font-size:11px;margin-bottom:6px;letter-spacing:1px}
+.mc-review-text{font-size:12px;color:#777;line-height:1.65;font-style:italic;margin-bottom:6px;position:relative;z-index:1}
+.mc-review-author{font-size:11px;color:#bbb;font-weight:500}
+.mc-footer{padding:0 28px 28px}
+.mc-btn{display:block;width:100%;background:var(--rb);color:#fff;padding:14px;border-radius:100px;font-size:13px;font-weight:600;border:none;cursor:none;font-family:'DM Sans',sans-serif;transition:all .22s;box-shadow:0 4px 16px rgba(255,45,139,.18)}
+.mc-btn:hover{box-shadow:0 8px 28px rgba(255,45,139,.32);transform:translateY(-1px)}
 
 /* MEMBERSHIP */
-.membership-card { max-width:460px; margin:40px auto 0; background:#fff; border-radius:32px; padding:44px 40px; border:2px solid transparent; background:linear-gradient(#fff,#fff) padding-box, var(--rb) border-box; box-shadow:0 20px 60px rgba(255,45,139,.12); text-align:center; }
-.mem-badge { display:inline-block; background:var(--rb); color:#fff; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; padding:6px 16px; border-radius:100px; font-weight:700; margin-bottom:20px; }
-.mem-price-row { margin-bottom:8px; }
-.mem-trial { font-family:'Playfair Display',serif; font-size:48px; color:#222; line-height:1; font-weight:700; }
-.mem-trial span { font-size:18px; font-weight:400; color:#aaa; font-family:'Inter',sans-serif; }
-.mem-then { font-size:13px; color:#bbb; margin-bottom:24px; }
-.mem-then strong { color:#555; }
-.mem-features { list-style:none; margin-bottom:28px; display:flex; flex-direction:column; gap:10px; text-align:left; }
-.mem-features li { display:flex; align-items:center; gap:12px; font-size:14px; color:#555; }
-.mem-features li::before { content:'✦'; color:var(--pink); font-size:10px; flex-shrink:0; }
-.mem-btn { display:block; width:100%; background:var(--rb); color:#fff; padding:16px; border-radius:100px; font-size:15px; font-weight:700; border:none; cursor:none; font-family:'Inter',sans-serif; box-shadow:0 6px 24px rgba(255,45,139,.3); transition:opacity .2s, transform .15s; margin-bottom:12px; }
-.mem-btn:hover { opacity:.88; transform:translateY(-1px); }
-.mem-meta { font-size:12px; color:#ccc; }
+.mem-wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:820px;margin:48px auto 0;border-radius:32px;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.1)}
+.mem-left{background:var(--rb);padding:52px 44px;color:#fff;position:relative;overflow:hidden}
+.mem-left::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.mem-left::after{content:'';position:absolute;bottom:-50px;left:-50px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.mem-badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);border-radius:100px;padding:6px 16px;font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:24px;position:relative;z-index:1}
+.mem-price{font-family:'Playfair Display',serif;font-size:68px;font-weight:700;line-height:1;margin-bottom:4px;position:relative;z-index:1}
+.mem-price sub{font-size:18px;vertical-align:baseline;font-family:'DM Sans',sans-serif;font-weight:300;opacity:.75}
+.mem-period{font-size:14px;opacity:.72;margin-bottom:6px;position:relative;z-index:1;font-weight:300}
+.mem-then{font-size:13px;opacity:.58;margin-bottom:32px;position:relative;z-index:1;font-weight:300}
+.mem-desc{font-size:16px;line-height:1.68;opacity:.88;position:relative;z-index:1;font-style:italic;font-family:'Playfair Display',serif}
+.mem-right{background:#fff;padding:52px 44px;display:flex;flex-direction:column;justify-content:space-between}
+.mem-features{list-style:none;display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+.mem-features li{display:flex;align-items:center;gap:14px;font-size:14px;color:#555;font-weight:400}
+.mem-feat-icon{width:32px;height:32px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.mem-btn{display:block;width:100%;background:var(--rb);color:#fff;padding:17px;border-radius:100px;font-size:15px;font-weight:600;border:none;cursor:none;font-family:'DM Sans',sans-serif;box-shadow:0 6px 28px rgba(255,45,139,.28);transition:all .25s;text-align:center;margin-bottom:12px}
+.mem-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(255,45,139,.4)}
+.mem-meta{font-size:12px;color:#ccc;text-align:center;font-weight:300}
+@media(max-width:620px){.mem-wrap{grid-template-columns:1fr}.mem-left,.mem-right{padding:38px 28px}.mem-price{font-size:54px}}
 
-/* SCARCITY */
-.scarcity-bar { background:linear-gradient(135deg,#fff8f0,#fff0f8); border:1.5px solid rgba(255,45,139,.15); border-radius:16px; padding:16px 24px; max-width:480px; margin:24px auto 0; display:flex; align-items:center; gap:12px; justify-content:center; }
-.scarcity-bar span { font-size:13px; color:#888; font-weight:500; }
-.scarcity-bar strong { color:#222; }
+.scarcity{display:flex;align-items:center;justify-content:center;gap:12px;margin:20px auto 0;padding:14px 28px;background:rgba(255,45,139,.04);border:1.5px solid rgba(255,45,139,.1);border-radius:100px;max-width:430px}
+.scarcity-dot{width:8px;height:8px;border-radius:50%;background:var(--pink);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+.scarcity span{font-size:13px;color:#888;font-weight:300}
+.scarcity strong{color:#1a1a1a;font-weight:600}
 
 /* FOOTER */
-.footer { background:var(--soft); padding:40px 24px; }
-.footer-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
-.footer-logo { font-family:'Playfair Display',serif; font-size:18px; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-style:italic; font-weight:700; }
-.footer-links { display:flex; gap:20px; flex-wrap:wrap; }
-.footer-link { font-size:12px; color:#bbb; background:none; border:none; cursor:none; font-family:'Inter',sans-serif; font-weight:500; transition:color .2s; padding:0; }
-.footer-link:hover { color:var(--pink); }
-.footer-copy { font-size:11px; color:#ddd; width:100%; text-align:center; margin-top:8px; }
+.footer{background:#1a1a1a;padding:52px 40px 36px}
+.footer-inner{max-width:960px;margin:0 auto}
+.footer-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:28px;margin-bottom:40px}
+.footer-logo{font-family:'Playfair Display',serif;font-size:20px;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic;font-weight:700;margin-bottom:10px}
+.footer-tagline{font-size:12px;color:rgba(255,255,255,.22);max-width:220px;line-height:1.7;font-weight:300}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.footer-link{font-size:12px;color:rgba(255,255,255,.28);background:none;border:none;cursor:none;font-family:'DM Sans',sans-serif;font-weight:400;transition:color .2s;padding:0}
+.footer-link:hover{color:rgba(255,255,255,.65)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.18);font-weight:300}
+.footer-rb{height:2px;width:72px;background:var(--rb);border-radius:2px;opacity:.45}
 
 /* MODAL */
-.modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
-.modal { background:#fff; border-radius:28px; padding:40px 36px; width:100%; max-width:420px; position:relative; box-shadow:0 24px 80px rgba(255,45,139,.15); }
-.modal-x { position:absolute; top:16px; right:18px; background:none; border:none; font-size:20px; cursor:none; color:#ccc; }
-.modal h2 { font-family:'Playfair Display',serif; font-size:26px; margin-bottom:6px; color:#222; }
-.modal-sub { font-size:13px; color:#aaa; margin-bottom:20px; }
-.modal-tabs { display:flex; margin-bottom:20px; border-radius:100px; background:#f5f5f5; padding:4px; }
-.mtab { flex:1; padding:9px; border:none; background:none; border-radius:100px; font-size:13px; font-weight:600; cursor:none; font-family:'Inter',sans-serif; color:#aaa; transition:all .2s; }
-.mtab.act { background:#fff; color:#222; box-shadow:0 2px 8px rgba(0,0,0,.08); }
-.google-btn { width:100%; background:#fff; color:#333; font-weight:700; font-size:14px; padding:13px; border-radius:100px; border:2px solid #eee; cursor:none; font-family:'Inter',sans-serif; margin-bottom:4px; display:flex; align-items:center; justify-content:center; gap:10px; transition:border .2s; }
-.google-btn:hover { border-color:#ccc; }
-.divider { display:flex; align-items:center; gap:12px; margin:14px 0; }
-.divider span { font-size:11px; color:#ccc; font-weight:600; white-space:nowrap; }
-.divider::before,.divider::after { content:''; flex:1; height:1px; background:#f0f0f0; }
-.field { margin-bottom:14px; }
-.field label { display:block; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#bbb; margin-bottom:6px; }
-.field input { width:100%; padding:12px 16px; border:2px solid #f0f0f0; border-radius:12px; font-size:14px; font-family:'Inter',sans-serif; color:#222; outline:none; background:#fafafa; }
-.field input:focus { border-color:var(--pink); background:#fff; }
-.auth-btn { width:100%; background:var(--rb); color:#fff; font-weight:700; font-size:15px; padding:14px; border-radius:100px; border:none; cursor:none; font-family:'Inter',sans-serif; margin-top:6px; }
-.auth-btn:disabled { opacity:.5; }
-.msg-err { background:#fff0f5; border:1.5px solid #ffb3d1; border-radius:12px; padding:10px 14px; font-size:12px; color:var(--pink); margin-bottom:12px; font-weight:500; }
-.msg-ok { background:#f0fff4; border:1.5px solid #b3ffd1; border-radius:12px; padding:10px 14px; font-size:12px; color:#00A040; margin-bottom:12px; font-weight:500; }
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:28px;padding:40px 36px;width:100%;max-width:420px;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.18)}
+.modal-rb{position:absolute;top:0;left:0;right:0;height:4px;background:var(--rb);border-radius:28px 28px 0 0}
+.modal-x{position:absolute;top:18px;right:20px;background:#f5f5f5;border:none;width:30px;height:30px;border-radius:50%;font-size:13px;cursor:none;color:#aaa;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.modal-x:hover{background:#ffe0ef;color:var(--pink)}
+.modal h2{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:6px;color:#1a1a1a;font-style:italic}
+.modal-sub{font-size:13px;color:#bbb;margin-bottom:22px;font-weight:300}
+.modal-tabs{display:flex;margin-bottom:20px;border-radius:100px;background:#f7f7f7;padding:4px}
+.mtab{flex:1;padding:9px;border:none;background:none;border-radius:100px;font-size:13px;font-weight:500;cursor:none;font-family:'DM Sans',sans-serif;color:#bbb;transition:all .2s}
+.mtab.act{background:#fff;color:#1a1a1a;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.google-btn{width:100%;background:#fff;color:#333;font-weight:500;font-size:14px;padding:13px;border-radius:100px;border:1.5px solid #eee;cursor:none;font-family:'DM Sans',sans-serif;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.google-btn:hover{border-color:#ddd;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0}
+.divider span{font-size:11px;color:#ddd;font-weight:500;white-space:nowrap}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#ccc;margin-bottom:7px}
+.field input{width:100%;padding:13px 16px;border:1.5px solid #f0f0f0;border-radius:14px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1a1a1a;outline:none;background:#fafafa;transition:border .2s}
+.field input:focus{border-color:var(--pink);background:#fff}
+.auth-btn{width:100%;background:var(--rb);color:#fff;font-weight:600;font-size:15px;padding:14px;border-radius:100px;border:none;cursor:none;font-family:'DM Sans',sans-serif;margin-top:6px}
+.auth-btn:disabled{opacity:.5}
+.msg-err{background:#fff0f5;border:1.5px solid #ffb3d1;border-radius:12px;padding:10px 14px;font-size:12px;color:var(--pink);margin-bottom:12px;font-weight:500}
+.msg-ok{background:#f0fff4;border:1.5px solid #b3ffd1;border-radius:12px;padding:10px 14px;font-size:12px;color:#00A040;margin-bottom:12px;font-weight:500}
 
 /* DASHBOARD */
-.dashboard { padding:48px 24px; max-width:720px; margin:0 auto; }
-.dash-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:36px; flex-wrap:wrap; gap:12px; }
-.dash-welcome { font-family:'Playfair Display',serif; font-size:28px; color:#222; }
-.dash-out { background:#f5f5f5; color:#888; font-size:12px; font-weight:700; padding:9px 18px; border-radius:100px; border:none; cursor:none; font-family:'Inter',sans-serif; }
-.dash-out:hover { background:#ffe0ef; color:var(--pink); }
-.stats { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:32px; }
-.stat { flex:1; min-width:100px; background:#fff; border-radius:18px; padding:20px 18px; border:2px solid #f5e8f8; text-align:center; }
-.stat-n { font-family:'Playfair Display',serif; font-size:36px; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; }
-.stat-l { font-size:11px; color:#bbb; margin-top:4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-.sess-hdr { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#ddd; margin-bottom:14px; }
-.sess-list { display:flex; flex-direction:column; gap:10px; }
-.sess-item { background:#fff; border-radius:16px; padding:16px 20px; border:2px solid #f5e8f8; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-.sess-type { font-family:'Playfair Display',serif; font-size:15px; color:#222; font-style:italic; }
-.sess-meta { font-size:11px; color:#ccc; margin-top:2px; }
-.sess-badge { background:var(--rb); color:#fff; font-size:10px; font-weight:700; padding:4px 12px; border-radius:100px; }
-.sess-empty { text-align:center; padding:40px 20px; color:#ccc; font-size:13px; }
+.dashboard{padding:60px 24px;max-width:720px;margin:0 auto}
+.dash-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:12px}
+.dash-welcome{font-family:'Playfair Display',serif;font-size:30px;color:#1a1a1a;font-style:italic}
+.dash-out{background:#f5f5f5;color:#888;font-size:12px;font-weight:600;padding:10px 20px;border-radius:100px;border:none;cursor:none;font-family:'DM Sans',sans-serif;transition:all .2s}
+.dash-out:hover{background:#ffe0ef;color:var(--pink)}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:36px}
+.stat{flex:1;min-width:100px;background:#fff;border-radius:20px;padding:22px 18px;border:1.5px solid rgba(0,0,0,.05);text-align:center}
+.stat-n{font-family:'Playfair Display',serif;font-size:38px;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.stat-l{font-size:11px;color:#bbb;margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.sess-hdr{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#ddd;margin-bottom:16px}
+.sess-list{display:flex;flex-direction:column;gap:10px}
+.sess-item{background:#fff;border-radius:18px;padding:18px 22px;border:1.5px solid rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sess-type{font-family:'Playfair Display',serif;font-size:15px;color:#1a1a1a;font-style:italic}
+.sess-meta{font-size:11px;color:#ccc;margin-top:2px;font-weight:300}
+.sess-badge{background:var(--rb);color:#fff;font-size:10px;font-weight:600;padding:4px 13px;border-radius:100px}
+.sess-empty{text-align:center;padding:48px 20px;color:#ccc;font-size:14px;font-weight:300}
 
 /* MAMACITAS PAGE */
-.m-hero { min-height:55vh; background:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:100px 24px 60px; }
-.m-arch { position:absolute; top:-100px; left:50%; transform:translateX(-50%); width:140vw; height:100vw; max-width:1600px; border-radius:50%; background:conic-gradient(from 165deg at 50% 0%,#FF2D8B,#FF6B00,#FFD000,#00C853,#2979FF,#9C27B0,#FF2D8B); opacity:.06; pointer-events:none; }
-.m-dots { position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(circle,rgba(156,39,176,.08) 1.5px,transparent 1.5px); background-size:28px 28px; }
-.m-brand { font-family:'Playfair Display',serif; font-size:clamp(52px,10vw,110px); line-height:.9; letter-spacing:-3px; font-style:italic; position:relative; z-index:2; background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.m-line { width:240px; height:3px; margin:18px auto 20px; background:var(--rb); border-radius:3px; position:relative; z-index:2; }
-.m-sub { font-size:clamp(14px,1.6vw,17px); color:#999; max-width:400px; line-height:1.75; position:relative; z-index:2; }
+.m-hero{min-height:52vh;background:var(--cream);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:110px 24px 60px}
+.m-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 30%,rgba(255,107,0,.09) 0%,transparent 55%),radial-gradient(ellipse 60% 50% at 80% 20%,rgba(255,45,139,.08) 0%,transparent 50%),radial-gradient(ellipse 70% 60% at 50% 90%,rgba(255,208,0,.08) 0%,transparent 55%);pointer-events:none}
+.m-brand{font-family:'Playfair Display',serif;font-size:clamp(56px,11vw,118px);line-height:.88;letter-spacing:-4px;font-style:italic;position:relative;z-index:2;background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:0;animation:fadeUp .9s .1s cubic-bezier(.22,1,.36,1) forwards}
+.m-line{width:200px;height:3px;margin:18px auto 22px;background:var(--rb);border-radius:3px;position:relative;z-index:2;opacity:0;animation:fadeUp .9s .25s cubic-bezier(.22,1,.36,1) forwards}
+.m-sub{font-size:clamp(14px,1.7vw,17px);color:#aaa;max-width:360px;line-height:1.8;position:relative;z-index:2;font-weight:300;opacity:0;animation:fadeUp .9s .38s cubic-bezier(.22,1,.36,1) forwards}
 
-/* PROFILO MAMACITA */
-.profile-page { padding:60px 24px; max-width:700px; margin:0 auto; }
-.profile-header { display:flex; gap:28px; align-items:flex-start; flex-wrap:wrap; margin-bottom:36px; }
-.profile-avatar { width:110px; height:110px; border-radius:50%; background:linear-gradient(135deg,#FFD6EC,#FFB3D9); display:flex; align-items:center; justify-content:center; font-size:58px; flex-shrink:0; box-shadow:0 8px 28px rgba(255,45,139,.2); }
-.profile-info { flex:1; }
-.profile-name { font-family:'Playfair Display',serif; font-size:36px; font-style:italic; font-weight:700; color:#222; margin-bottom:6px; }
-.profile-origin { font-size:14px; color:#bbb; font-weight:600; margin-bottom:12px; }
-.profile-bio { font-size:14px; color:#666; line-height:1.7; margin-bottom:16px; }
-.profile-tags { display:flex; gap:8px; flex-wrap:wrap; }
-.profile-tag { background:var(--soft); border-radius:100px; padding:5px 14px; font-size:12px; font-weight:600; color:var(--pink); }
-.services-grid { display:flex; flex-direction:column; gap:12px; margin-top:28px; }
-.service-card { background:#fff; border-radius:16px; padding:18px 22px; border:2px solid #f5e8f8; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.service-name { font-size:14px; font-weight:600; color:#222; }
-.service-price { font-family:'Playfair Display',serif; font-size:20px; color:var(--pink); font-weight:700; }
-.service-btn { background:var(--rb); color:#fff; font-size:12px; font-weight:700; padding:9px 20px; border-radius:100px; border:none; cursor:none; font-family:'Inter',sans-serif; white-space:nowrap; }
+/* PROFILE */
+.profile-page{padding:70px 24px;max-width:720px;margin:0 auto}
+.back-btn{background:none;border:none;cursor:none;color:#bbb;font-size:13px;font-weight:500;margin-bottom:28px;display:inline-flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif;transition:color .2s;padding:0}
+.back-btn:hover{color:var(--pink)}
+.profile-top{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;margin-bottom:32px;background:#fff;border-radius:28px;padding:36px;border:1.5px solid rgba(0,0,0,.05)}
+.profile-avatar{width:108px;height:108px;border-radius:50%;background:linear-gradient(135deg,#FFE4F3,#FFD0E8);display:flex;align-items:center;justify-content:center;font-size:56px;flex-shrink:0;box-shadow:0 8px 28px rgba(255,45,139,.16)}
+.profile-info{flex:1}
+.profile-name{font-family:'Playfair Display',serif;font-size:36px;font-style:italic;font-weight:700;color:#1a1a1a;margin-bottom:6px;letter-spacing:-1px}
+.profile-origin{font-size:13px;color:#bbb;font-weight:400;margin-bottom:12px;letter-spacing:.3px}
+.profile-bio{font-size:14px;color:#666;line-height:1.75;margin-bottom:16px;font-weight:300}
+.profile-tags{display:flex;gap:8px;flex-wrap:wrap}
+.profile-tag{background:var(--warm);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:500;color:#888}
+.services-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.service-card{background:#fff;border-radius:18px;padding:20px 24px;border:1.5px solid rgba(0,0,0,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;transition:all .2s}
+.service-card:hover{border-color:rgba(255,45,139,.18);box-shadow:0 8px 24px rgba(255,45,139,.07)}
+.service-name{font-size:14px;font-weight:500;color:#1a1a1a}
+.service-price{font-family:'Playfair Display',serif;font-size:22px;color:var(--pink);font-weight:700}
+.service-btn{background:var(--rb);color:#fff;font-size:12px;font-weight:600;padding:10px 22px;border-radius:100px;border:none;cursor:none;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s}
+.service-btn:hover{box-shadow:0 6px 20px rgba(255,45,139,.28);transform:translateY(-1px)}
+.available-now{background:linear-gradient(135deg,#f0fff4,#e8fff0);border-radius:20px;padding:22px 28px;border:1.5px solid rgba(0,200,83,.22);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.an-dot{width:9px;height:9px;border-radius:50%;background:#00C853;box-shadow:0 0 10px rgba(0,200,83,.65);flex-shrink:0;animation:pulse 2s ease-in-out infinite}
+.lock-gate{background:var(--warm);border-radius:24px;padding:52px 36px;text-align:center;border:1.5px dashed rgba(255,45,139,.18)}
+.lock-gate-icon{font-size:44px;margin-bottom:16px}
+.lock-gate h3{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:10px;color:#1a1a1a;font-style:italic}
+.lock-gate p{font-size:14px;color:#aaa;margin-bottom:28px;line-height:1.75;font-weight:300}
 
 /* TOAST */
-.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:600; padding:12px 24px; border-radius:100px; z-index:9999; pointer-events:none; white-space:nowrap; }
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:13px;font-weight:500;padding:13px 26px;border-radius:100px;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.2)}
 
-/* GRAD */
-.grad { background:var(--rb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.grad{background:var(--rb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 `;
 
 const GoogleIcon = () => (
@@ -330,25 +356,7 @@ const GoogleIcon = () => (
 
 function Strip({ items }) {
   const d = [...items, ...items];
-  return (
-    <div className="strip">
-      <div className="mtrack">
-        {d.map((t, i) => <span key={i} className="mitem">{t}</span>)}
-      </div>
-    </div>
-  );
-}
-
-function Blobs() {
-  return <>{[1,2,3,4].map(i => <div key={i} className={`cblob cb${i}`}/>)}</>;
-}
-
-function Floats({ emojis }) {
-  return (
-    <div className="fls">
-      {emojis.map((e, i) => <span key={i} className="fl">{e}</span>)}
-    </div>
-  );
+  return <div className="strip"><div className="mtrack">{d.map((t, i) => <span key={i} className="mitem">{t}</span>)}</div></div>;
 }
 
 function AuthModal({ onClose, onLogin }) {
@@ -358,7 +366,6 @@ function AuthModal({ onClose, onLogin }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
-
   const submit = async () => {
     setErr(""); setOk("");
     if (!email || !pwd) { setErr("Fill in all fields."); return; }
@@ -376,17 +383,11 @@ function AuthModal({ onClose, onLogin }) {
     }
     setLoading(false);
   };
-
-  const googleLogin = () => {
-    window.open(
-      `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.href)}`,
-      "_blank", "width=500,height=600,left=200,top=100"
-    );
-  };
-
+  const googleLogin = () => window.open(`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.href)}`, "_blank", "width=500,height=600,left=200,top=100");
   return (
     <div className="modal-ov" onClick={e => e.target.classList.contains("modal-ov") && onClose()}>
       <div className="modal">
+        <div className="modal-rb" />
         <button className="modal-x" onClick={onClose}>✕</button>
         <h2>Welcome 🎭</h2>
         <p className="modal-sub">Sign in to access the Mamacitas</p>
@@ -409,17 +410,12 @@ function AuthModal({ onClose, onLogin }) {
 function Dashboard({ user, onLogout, onBook }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    apiGetSessions(user.token).then(data => { setSessions(Array.isArray(data) ? data : []); setLoading(false); });
-  }, []);
+  useEffect(() => { apiGetSessions(user.token).then(data => { setSessions(Array.isArray(data) ? data : []); setLoading(false); }); }, []);
   const spent = sessions.reduce((s, r) => s + (r.price || 0), 0);
   return (
     <div className="dashboard">
       <div className="dash-hdr">
-        <div>
-          <div className="sec-label">Personal area</div>
-          <div className="dash-welcome">Hi, <span className="grad">{user.email.split("@")[0]}</span> 👋</div>
-        </div>
+        <div><div className="sec-label">Personal area</div><div className="dash-welcome">Hi, <span className="grad">{user.email.split("@")[0]}</span> 👋</div></div>
         <button className="dash-out" onClick={onLogout}>Sign out →</button>
       </div>
       <div className="stats">
@@ -428,75 +424,90 @@ function Dashboard({ user, onLogout, onBook }) {
         ))}
       </div>
       <div className="sess-hdr">Session history</div>
-      {loading ? <p style={{ color: "#ccc", fontSize: 13, padding: "20px 0" }}>Loading...</p>
+      {loading ? <p style={{ color: "#ccc", fontSize: 13, padding: "20px 0", fontWeight: 300 }}>Loading...</p>
         : sessions.length === 0
-          ? <div className="sess-empty"><div style={{ fontSize: 36, marginBottom: 10 }}>🎭</div>No sessions yet. Book your first one!</div>
+          ? <div className="sess-empty"><div style={{ fontSize: 36, marginBottom: 12 }}>🎭</div>No sessions yet. Book your first one!</div>
           : <div className="sess-list">{sessions.map(s => (
             <div key={s.id} className="sess-item">
               <div><div className="sess-type">{s.type || "Session"}</div><div className="sess-meta">{s.duration || ""} · {new Date(s.booked_at).toLocaleDateString("en-GB")}</div></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>{s.price && <span style={{ fontWeight: 700, fontSize: 14 }}>€{s.price}</span>}<span className="sess-badge">{s.status}</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>{s.price && <span style={{ fontWeight: 600, fontSize: 14 }}>€{s.price}</span>}<span className="sess-badge">{s.status}</span></div>
             </div>
           ))}</div>
       }
-      <button className="btn-primary" style={{ marginTop: 24, width: "100%" }} onClick={onBook}>+ Book a new session 🌶</button>
+      <button className="btn-hero" style={{ marginTop: 28, width: "100%", fontSize: 14 }} onClick={onBook}>+ Book a new session 🌶</button>
     </div>
   );
 }
 
-function ProfilePage({ tutor, onBack, onBook, user, onShowAuth }) {
+function MamacitaCard({ tutor, onView }) {
+  return (
+    <div className="mc">
+      <div className="mc-color-bar" />
+      <div className="mc-body">
+        <div className="mc-avatar-wrap">
+          <div className="mc-avatar">{tutor.avatar}</div>
+          <div className={`mc-live-badge ${tutor.live ? "on" : "off"}`}><span /></div>
+        </div>
+        <div className="mc-name">{tutor.name}</div>
+        <div className="mc-origin">{tutor.flag} {tutor.origin}</div>
+        <div className="mc-tags">{tutor.tags.map(t => <span key={t} className="mc-tag">{t}</span>)}</div>
+        <div className="mc-review">
+          <div className="mc-review-stars">{"★".repeat(Math.floor(tutor.rating))}</div>
+          <div className="mc-review-text">{tutor.reviews[0].text}</div>
+          <div className="mc-review-author">— {tutor.reviews[0].author}</div>
+        </div>
+      </div>
+      <div className="mc-footer">
+        <button className="mc-btn" onClick={onView}>View profile →</button>
+      </div>
+    </div>
+  );
+}
+
+function ProfilePage({ tutor, onBack, onBook, user, onTrial }) {
   return (
     <div className="profile-page">
-      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "none", color: "#bbb", fontSize: 13, fontWeight: 600, marginBottom: 24, display: "flex", alignItems: "center", gap: 6, fontFamily: "'Inter',sans-serif" }}>
-        ← Back to Mamacitas
-      </button>
-      <div className="profile-header">
+      <button className="back-btn" onClick={onBack}>← Back to Mamacitas</button>
+      <div className="profile-top">
         <div className="profile-avatar">{tutor.avatar}</div>
         <div className="profile-info">
           <div className="profile-name">{tutor.name}</div>
           <div className="profile-origin">{tutor.flag} {tutor.origin} · {tutor.age} years old</div>
           <p className="profile-bio">{tutor.personality}</p>
-          <div className="profile-tags">
-            {tutor.tags.map(t => <span key={t} className="profile-tag">{t}</span>)}
-          </div>
+          <div className="profile-tags">{tutor.tags.map(t => <span key={t} className="profile-tag">{t}</span>)}</div>
         </div>
       </div>
-
       {!user ? (
-        <div style={{ background: "var(--soft)", borderRadius: 24, padding: "40px 32px", textAlign: "center", border: "2px dashed #f5c6e0" }}>
-          <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
-          <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, marginBottom: 10, color: "#222" }}>Members only</div>
-          <p style={{ fontSize: 14, color: "#aaa", marginBottom: 24, lineHeight: 1.7 }}>Start your free 7-day trial to book sessions with {tutor.name}.</p>
-          <button className="btn-primary" onClick={() => window.location.href = STRIPE_TRIAL_LINK}>Start free trial →</button>
+        <div className="lock-gate">
+          <div className="lock-gate-icon">🔒</div>
+          <h3>Members only</h3>
+          <p>Start your free 7-day trial to view services and book sessions with {tutor.name}.</p>
+          <button className="btn-hero" onClick={onTrial}>Start free trial →</button>
         </div>
       ) : (
         <>
-          <div style={{ marginBottom: 8 }}>
-            <div className="sec-label" style={{ marginBottom: 16 }}>Services & Pricing</div>
-            <div className="services-grid">
-              {tutor.services.map(s => (
-                <div key={s.name} className="service-card">
-                  <div className="service-name">{s.name}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div className="service-price">{s.price}</div>
-                    <button className="service-btn" onClick={onBook}>Book →</button>
-                  </div>
+          <div className="sec-label" style={{ marginBottom: 16 }}>Services & Pricing</div>
+          <div className="services-grid">
+            {tutor.services.map(s => (
+              <div key={s.name} className="service-card">
+                <div className="service-name">{s.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div className="service-price">{s.price}</div>
+                  <button className="service-btn" onClick={onBook}>Book →</button>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {tutor.live && (
-            <div style={{ marginTop: 24, background: "linear-gradient(135deg,#f0fff4,#e8f5e9)", borderRadius: 20, padding: "20px 24px", border: "1.5px solid #00C853", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#00C853", display: "inline-block", boxShadow: "0 0 8px #00C853" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#00A040" }}>Available Now</span>
-                </div>
-                <p style={{ fontSize: 12, color: "#666" }}>{tutor.name} is online. Start an instant conversation.</p>
               </div>
-              <button className="btn-primary" style={{ padding: "12px 24px", fontSize: 13 }} onClick={onBook}>
-                Start now →
-              </button>
+            ))}
+          </div>
+          {tutor.live && (
+            <div className="available-now">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span className="an-dot" />
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#00A040", marginBottom: 3 }}>Available Now</div>
+                  <p style={{ fontSize: 12, color: "#666", fontWeight: 300 }}>{tutor.name} is online. Start an instant conversation.</p>
+                </div>
+              </div>
+              <button className="btn-hero" style={{ padding: "13px 28px", fontSize: 13 }} onClick={onBook}>Start now →</button>
             </div>
           )}
         </>
@@ -505,24 +516,14 @@ function ProfilePage({ tutor, onBack, onBook, user, onShowAuth }) {
   );
 }
 
-const STRIP_ITEMS = [
-  "Private Spanish Conversations",
-  "One-to-One with Mamacitas",
-  "From Latin America & Spain",
-  "Fun · Natural · Real",
-  "Available Now",
-  "Book a Private Session",
-  "¡Hola Mamacita!",
-  "Start your free trial today",
-];
+import dynamic from 'next/dynamic';
 
-export default function App() {
+function App() {
   const [page, setPage] = useState("home");
   const [showAuth, setShowAuth] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
-  const [user, setUser] = useState(() => {
-    try { const s = localStorage.getItem("hm_user"); return s ? JSON.parse(s) : null; } catch { return null; }
-  });
+  const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState(() => { try { const s = localStorage.getItem("hm_user"); return s ? JSON.parse(s) : null; } catch { return null; } });
   const [selectedTutor, setSelectedTutor] = useState(null);
 
   useEffect(() => {
@@ -532,32 +533,24 @@ export default function App() {
 
   useEffect(() => {
     const el = document.createElement("div");
-    el.id = "peach-cursor"; el.textContent = "🍑";
-    Object.assign(el.style, { position: "fixed", top: 0, left: 0, pointerEvents: "none", zIndex: 99999, fontSize: "28px", transform: "translate(-50%,-50%)", userSelect: "none", lineHeight: 1, transition: "left 0.05s ease-out, top 0.05s ease-out" });
+    el.id = "hm-cursor"; el.textContent = "🍑";
+    Object.assign(el.style, { position: "fixed", top: 0, left: 0, pointerEvents: "none", zIndex: 99999, fontSize: "26px", transform: "translate(-50%,-50%)", userSelect: "none", lineHeight: 1 });
     document.body.appendChild(el);
     const move = e => { el.style.left = e.clientX + "px"; el.style.top = e.clientY + "px"; };
     window.addEventListener("mousemove", move);
     document.body.style.cursor = "none";
-    return () => { window.removeEventListener("mousemove", move); el.remove(); document.body.style.cursor = ""; };
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("scroll", onScroll); el.remove(); document.body.style.cursor = ""; };
   }, []);
 
   const toast = m => { setToastMsg(m); setTimeout(() => setToastMsg(""), 2800); };
-  const go = (p) => { setPage(p); window.scrollTo({ top: 0, behavior: "instant" }); };
-  const goAnchor = (anchor) => {
-    setPage("home");
-    setTimeout(() => document.getElementById("sec-" + anchor)?.scrollIntoView({ behavior: "smooth" }), 80);
-  };
-
-  const handleTrialClick = () => {
-    if (STRIPE_TRIAL_LINK === "STRIPE_TRIAL_LINK") {
-      toast("⚙️ Stripe trial link not configured yet.");
-      return;
-    }
-    window.location.href = STRIPE_TRIAL_LINK;
-  };
+  const go = p => { setPage(p); window.scrollTo({ top: 0, behavior: "instant" }); };
+  const goAnchor = anchor => { setPage("home"); setTimeout(() => document.getElementById("sec-" + anchor)?.scrollIntoView({ behavior: "smooth" }), 80); };
+  const handleTrial = () => { if (STRIPE_TRIAL_LINK === "STRIPE_TRIAL_LINK") { toast("⚙️ Stripe trial link coming soon!"); return; } window.location.href = STRIPE_TRIAL_LINK; };
 
   const Nav = () => (
-    <nav className="nav">
+    <nav className={`nav${scrolled ? " scrolled" : ""}`}>
       <div className="nav-rb" />
       <div className="nav-inner">
         <button className="nav-logo" onClick={() => go("home")}>Hola Mamacita</button>
@@ -566,14 +559,8 @@ export default function App() {
           <button className="nav-link" onClick={() => go("mamacitas")}>Mamacitas</button>
           <button className="nav-link" onClick={() => goAnchor("membership")}>Membership</button>
           {user
-            ? <>
-              <button className="nav-link" onClick={() => go("dashboard")}>👤 {user.email.split("@")[0]}</button>
-              <button className="nav-cta" onClick={() => go("mamacitas")}>Browse Mamacitas 🌶</button>
-            </>
-            : <>
-              <button className="nav-link" onClick={() => setShowAuth(true)}>Sign in</button>
-              <button className="nav-cta" onClick={handleTrialClick}>Start Free Trial 🌶</button>
-            </>
+            ? <><button className="nav-link" onClick={() => go("dashboard")}>👤 {user.email.split("@")[0]}</button><button className="nav-cta" onClick={() => go("mamacitas")}>Browse 🌶</button></>
+            : <><button className="nav-link" onClick={() => setShowAuth(true)}>Sign in</button><button className="nav-cta" onClick={handleTrial}>Free Trial 🌶</button></>
           }
         </div>
       </div>
@@ -583,17 +570,26 @@ export default function App() {
   const Footer = () => (
     <footer className="footer">
       <div className="footer-inner">
-        <div className="footer-logo">Hola Mamacita 🌶</div>
-        <div className="footer-links">
-          <button className="footer-link" onClick={() => toast("Coming soon")}>About</button>
-          <button className="footer-link" onClick={() => toast("Coming soon")}>Terms</button>
-          <button className="footer-link" onClick={() => toast("Coming soon")}>Privacy</button>
-          <button className="footer-link" onClick={() => toast("Coming soon")}>Become a Mamacita</button>
+        <div className="footer-top">
+          <div>
+            <div className="footer-logo">Hola Mamacita 🌶</div>
+            <div className="footer-tagline">Private Conversational Spanish Experience with Latina Mamacitas.</div>
+          </div>
+          <div className="footer-links">
+            {["About", "Terms", "Privacy", "Become a Mamacita"].map(l => (
+              <button key={l} className="footer-link" onClick={() => toast("Coming soon")}>{l}</button>
+            ))}
+          </div>
         </div>
-        <div className="footer-copy">© 2025 Hola Mamacita · Private Conversational Spanish Experience</div>
+        <div className="footer-bottom">
+          <div className="footer-copy">© 2025 Hola Mamacita · All rights reserved</div>
+          <div className="footer-rb" />
+        </div>
       </div>
     </footer>
   );
+
+  const floatEmojis = ["🌶","🌺","✨","🌴","💃","🔥","🎉","🍹"];
 
   return (
     <>
@@ -602,218 +598,142 @@ export default function App() {
       {toastMsg && <div className="toast">{toastMsg}</div>}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onLogin={u => { setUser(u); toast("🎉 Welcome back!"); }} />}
 
-      {/* DASHBOARD */}
       {page === "dashboard" && user && (
         <Dashboard user={user} onLogout={() => { setUser(null); toast("👋 Signed out!"); go("home"); }} onBook={() => go("mamacitas")} />
       )}
 
-      {/* PROFILO MAMACITA */}
       {page === "profile" && selectedTutor && (
-        <ProfilePage
-          tutor={selectedTutor}
-          onBack={() => go("mamacitas")}
-          onBook={() => toast("🔗 Calendly integration coming soon!")}
-          user={user}
-          onShowAuth={() => setShowAuth(true)}
-        />
+        <ProfilePage tutor={selectedTutor} onBack={() => go("mamacitas")} onBook={() => toast("🔗 Calendly coming soon!")} user={user} onTrial={handleTrial} />
       )}
 
-      {/* MAMACITAS PAGE */}
       {page === "mamacitas" && (
         <>
           <section className="m-hero">
-            <div className="m-arch" /><div className="m-dots" />
-            <Blobs />
-            <Floats emojis={["🎭", "💃", "🌺", "🔥", "✨", "🌴", "🎉", "🍹"]} />
-            <div className="m-brand" style={{ position: "relative", zIndex: 2 }}>Mamacitas</div>
+            <div className="hs hs1" /><div className="hs hs2" /><div className="hs hs3" />
+            <div className="fls">{["🎭","💃","🌺","🔥","✨","🌴","🎉","🍹"].map((e,i) => <span key={i} className="fl">{e}</span>)}</div>
+            <div className="m-brand">Mamacitas</div>
             <div className="m-line" />
             <p className="m-sub">Charismatic. Latina. Native speakers.<br />Choose yours and start speaking.</p>
           </section>
-          <Strip items={["Playful", "Confident", "Native speakers", "From Latin America & Spain", "Available Now", "¡Vámonos!", "Real conversations only"]} />
-          <div className="sec bg-white">
-            <div className="wrap">
-              <div className="tc" style={{ marginBottom: 48 }}>
-                <div className="sec-label">Our Mamacitas</div>
-                <h2 className="sec-title">Meet the <em>Mamacitas</em></h2>
-                <p className="sec-desc">All native speakers · Handpicked · Sessions via Zoom</p>
-              </div>
+          <Strip items={["Playful","Confident","Native speakers","From Latin America & Spain","Available Now","¡Vámonos!","Real conversations only"]} />
+          <div className="sec bg-cream">
+            <div className="wrap tc">
+              <div className="sec-label">Our Mamacitas</div>
+              <h2 className="sec-title">Meet the <em>Mamacitas</em></h2>
+              <p className="sec-desc">All native speakers · Handpicked · Sessions via Zoom</p>
               <div className="mamacita-grid">
-                {TUTORS.map(tutor => (
-                  <div key={tutor.name} className="mamacita-card">
-                    <div className="mc-top">
-                      <div className="mc-avatar">{tutor.avatar}</div>
-                      <div className="mc-name">{tutor.name}</div>
-                      <div className="mc-origin">{tutor.flag} {tutor.origin}</div>
-                      <div className={`mc-live ${tutor.live ? "online" : "offline"}`}>
-                        <span className="mc-live-dot" />
-                        {tutor.live ? "Available Now" : "Offline"}
-                      </div>
-                      <div className="mc-tags">
-                        {tutor.tags.map(t => <span key={t} className="mc-tag">{t}</span>)}
-                      </div>
-                    </div>
-                    <div className="mc-review">
-                      <div className="mc-review-stars">{"★".repeat(Math.floor(tutor.rating))}</div>
-                      <div className="mc-review-text">"{tutor.reviews[0].text}"</div>
-                      <div className="mc-review-author">— {tutor.reviews[0].author}</div>
-                    </div>
-                    <div className="mc-footer">
-                      <button className="mc-btn" onClick={() => { setSelectedTutor(tutor); go("profile"); }}>
-                        View profile →
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                {TUTORS.map(t => <MamacitaCard key={t.name} tutor={t} onView={() => { setSelectedTutor(t); go("profile"); }} />)}
               </div>
             </div>
           </div>
-          <div className="sec bg-night tc" style={{ position: "relative" }}>
-            <div className="wsm" style={{ position: "relative", zIndex: 1 }}>
-              <h2 className="sec-title" style={{ color: "#fff" }}>Don't wait for your <em style={{ color: "var(--yellow)", WebkitTextFillColor: "var(--yellow)" }}>Mamacita</em>.</h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,.4)", margin: "14px auto 28px", maxWidth: 340, lineHeight: 1.7 }}>Sessions start now. Join the club.</p>
-              <button className="btn-primary" onClick={handleTrialClick}>Start free trial 🎭</button>
+          <div className="sec bg-warm tc">
+            <div className="wsm">
+              <div className="sec-label">Ready?</div>
+              <h2 className="sec-title">Don't wait for your <em>Mamacita</em>.</h2>
+              <p className="sec-desc" style={{ marginBottom: 32 }}>Sessions start now. Join the club.</p>
+              <button className="btn-hero" onClick={handleTrial}>Start free trial 🎭</button>
             </div>
           </div>
           <Footer />
         </>
       )}
 
-      {/* HOME */}
       {page === "home" && (
         <>
-          {/* HERO */}
           <section className="hero">
-            <div className="hero-bg-dots" />
-            <div className="hero-arch" />
-            <Blobs />
-            <Floats emojis={["🌶", "🌺", "✨", "🌴", "💃", "🔥", "🎉", "🍹"]} />
+            <div className="hs hs1"/><div className="hs hs2"/><div className="hs hs3"/>
+            <div className="hs hs4"/><div className="hs hs5"/>
+            <div className="hs dot1"/><div className="hs dot2"/><div className="hs dot3"/>
+            <div className="fls">{floatEmojis.map((e,i) => <span key={i} className="fl">{e}</span>)}</div>
             <div className="hero-inner">
-              <div className="hero-badge">
-                <span className="hero-badge-dot" />
-                Private Spanish Experience
-              </div>
-              <div className="brand">Hola Mamacita</div>
-              <div className="hero-sub-title">Practice Spanish with a Mamacita</div>
-              <p className="hero-desc">
-                Private one-to-one Spanish conversations with Latina Mamacitas.<br />
-                Fun, natural and real.
-              </p>
+              <div className="hero-badge"><span className="hb-dot"/>Private Spanish Experience</div>
+              <div className="brand">Hola Mamacita<span className="brand-under"/></div>
+              <div className="hero-tagline">Practice Spanish with a Mamacita</div>
+              <p className="hero-desc">Private one-to-one Spanish conversations with Latina Mamacitas.<br/>Fun, natural and real.</p>
               <div className="hero-cta-group">
-                <button className="btn-primary" onClick={handleTrialClick}>
-                  Start Free 7-Day Trial →
-                </button>
-                <div className="hero-meta">
-                  No commitment <span>·</span> Cancel anytime <span>·</span> No credit card needed to explore
-                </div>
+                <button className="btn-hero" onClick={handleTrial}>Start Free 7-Day Trial →</button>
+                <div className="hero-meta">No commitment <span>·</span> Cancel anytime <span>·</span> 9.99€/month after trial</div>
               </div>
             </div>
-            <div className="scroll-arrow" />
+            <div className="scroll-hint">
+              <span className="scroll-hint-text">Scroll</span>
+              <div className="scroll-arrow"/>
+            </div>
           </section>
 
-          <Strip items={STRIP_ITEMS} />
+          <Strip items={STRIP_ITEMS}/>
 
-          {/* HOW IT WORKS */}
-          <div className="sec bg-soft tc" id="sec-how">
+          <div className="sec bg-warm tc" id="sec-how">
             <div className="wrap">
               <div className="sec-label">How it works</div>
-              <h2 className="sec-title">How <em>Hola Mamacita</em> Works</h2>
-              <p className="sec-desc">
-                Join the club and start practicing Spanish with Mamacitas from Latin America and Spain.
-                Choose a Mamacita, start an instant conversation or book a private session.
-              </p>
-              <div className="how-steps">
-                <div className="how-step">
-                  <div className="how-step-icon">🎭</div>
-                  <div className="how-step-num">Step 01</div>
-                  <h3>Join the club</h3>
-                  <p>Start your free 7-day trial. No commitment, cancel anytime.</p>
-                </div>
-                <div className="how-step">
-                  <div className="how-step-icon">💃</div>
-                  <div className="how-step-num">Step 02</div>
-                  <h3>Choose your Mamacita</h3>
-                  <p>Browse profiles, pick your favourite or go for an instant call.</p>
-                </div>
-                <div className="how-step">
-                  <div className="how-step-icon">🌶</div>
-                  <div className="how-step-num">Step 03</div>
-                  <h3>Start your conversation</h3>
-                  <p>Talk Spanish. For real. No scripts, no textbooks, just conversation.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* MEET THE MAMACITAS */}
-          <div className="sec bg-white tc" id="sec-mamacitas">
-            <div className="wrap">
-              <div className="sec-label">The Mamacitas</div>
-              <h2 className="sec-title">Meet the <em>Mamacitas</em></h2>
-              <p className="sec-desc">Native speakers from Latin America and Spain. Handpicked for their energy, charisma and conversational skills.</p>
-              <div className="mamacita-grid">
-                {TUTORS.map(tutor => (
-                  <div key={tutor.name} className="mamacita-card">
-                    <div className="mc-top">
-                      <div className="mc-avatar">{tutor.avatar}</div>
-                      <div className="mc-name">{tutor.name}</div>
-                      <div className="mc-origin">{tutor.flag} {tutor.origin}</div>
-                      <div className={`mc-live ${tutor.live ? "online" : "offline"}`}>
-                        <span className="mc-live-dot" />
-                        {tutor.live ? "Available Now" : "Offline"}
-                      </div>
-                      <div className="mc-tags">
-                        {tutor.tags.map(t => <span key={t} className="mc-tag">{t}</span>)}
-                      </div>
-                    </div>
-                    <div className="mc-review">
-                      <div className="mc-review-stars">{"★".repeat(Math.floor(tutor.rating))}</div>
-                      <div className="mc-review-text">"{tutor.reviews[0].text}"</div>
-                      <div className="mc-review-author">— {tutor.reviews[0].author}</div>
-                    </div>
-                    <div className="mc-footer">
-                      <button className="mc-btn" onClick={() => { setSelectedTutor(tutor); go("profile"); }}>
-                        View profile →
-                      </button>
-                    </div>
+              <h2 className="sec-title">Simple as <em>¡hola!</em></h2>
+              <p className="sec-desc">Join the club, choose your Mamacita and start speaking Spanish. No textbooks, no homework.</p>
+              <div className="how-grid">
+                {[
+                  {n:"01",icon:"🎭",title:"Join the club",desc:"Start your free 7-day trial. No commitment, cancel anytime."},
+                  {n:"02",icon:"💃",title:"Choose your Mamacita",desc:"Browse profiles, pick your favourite or go for an instant call right now."},
+                  {n:"03",icon:"🌶",title:"Start speaking",desc:"Real conversation. No scripts, no textbooks. Just you and a Mamacita."},
+                ].map((s,i) => (
+                  <div key={i} className="how-card">
+                    <div className="how-num">{s.n}</div>
+                    <span className="how-icon">{s.icon}</span>
+                    <h3>{s.title}</h3>
+                    <p>{s.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* MEMBERSHIP */}
-          <div className="sec bg-soft tc" id="sec-membership">
+          <div className="sec bg-cream tc" id="sec-mamacitas">
+            <div className="wrap">
+              <div className="sec-label">The Mamacitas</div>
+              <h2 className="sec-title">Meet the <em>Mamacitas</em></h2>
+              <p className="sec-desc">Handpicked for their energy, charisma and conversational skills. All native speakers from Latin America and Spain.</p>
+              <div className="mamacita-grid">
+                {TUTORS.map(t => <MamacitaCard key={t.name} tutor={t} onView={() => { setSelectedTutor(t); go("profile"); }} />)}
+              </div>
+            </div>
+          </div>
+
+          <div className="sec bg-warm tc" id="sec-membership">
             <div className="wrap">
               <div className="sec-label">Membership</div>
               <h2 className="sec-title">Join <em>Hola Mamacita</em></h2>
               <p className="sec-desc">One membership. Unlimited access to all Mamacitas, instant conversations and private bookings.</p>
-              <div className="membership-card">
-                <div className="mem-badge">✦ Free Trial</div>
-                <div className="mem-price-row">
-                  <div className="mem-trial">Free <span>for 7 days</span></div>
+              <div className="mem-wrap">
+                <div className="mem-left">
+                  <div className="mem-badge">✦ Free Trial</div>
+                  <div className="mem-price">Free <sub>for 7 days</sub></div>
+                  <div className="mem-period">Then 9.99€ / month</div>
+                  <div className="mem-then">Cancel anytime · No hidden fees</div>
+                  <div className="mem-desc">"The club where you actually learn to speak Spanish."</div>
                 </div>
-                <div className="mem-then">Then <strong>9.99€ / month</strong> · Cancel anytime</div>
-                <ul className="mem-features">
-                  <li>Access to all Mamacitas</li>
-                  <li>Instant conversations (Available Now)</li>
-                  <li>Private session bookings</li>
-                  <li>Mamacita profiles & content</li>
-                </ul>
-                <button className="mem-btn" onClick={handleTrialClick}>
-                  Start free trial →
-                </button>
-                <div className="mem-meta">No commitment · Cancel anytime · Secure payment</div>
+                <div className="mem-right">
+                  <ul className="mem-features">
+                    {[["🎭","Access to all Mamacitas"],["⚡","Instant conversations (Available Now)"],["📅","Private session bookings"],["🌶","Mamacita profiles & exclusive content"]].map(([icon,text]) => (
+                      <li key={text}><span className="mem-feat-icon">{icon}</span>{text}</li>
+                    ))}
+                  </ul>
+                  <div>
+                    <button className="mem-btn" onClick={handleTrial}>Start free trial →</button>
+                    <div className="mem-meta">Secure payment · Cancel anytime</div>
+                  </div>
+                </div>
               </div>
-              <div className="scarcity-bar">
-                <span>⚡</span>
+              <div className="scarcity">
+                <span className="scarcity-dot"/>
                 <span>Only a <strong>limited number of Mamacitas</strong> are available each day.</span>
               </div>
             </div>
           </div>
 
-          <Footer />
+          <Footer/>
         </>
       )}
     </>
   );
 }
+
+const AppNoSSR = dynamic(() => Promise.resolve(App), { ssr: false });
+export default AppNoSSR;
