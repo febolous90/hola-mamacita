@@ -1,0 +1,1 @@
+require('fs').writeFileSync('pages/admin/profile.jsx', 'export default function AdminProfile() { return null; }');
